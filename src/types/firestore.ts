@@ -35,7 +35,7 @@ export type Highlight = {
   image?: string
   directlink?: string
   tags: string[]
-  timestamp?: string
+  timestamp?: string | FieldValue
   batch?: string
   userId: string
 }

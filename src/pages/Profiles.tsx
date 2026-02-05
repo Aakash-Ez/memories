@@ -10,6 +10,7 @@ import {
   defaultKeyQAFields,
   keyQAFieldsByBatch,
 } from '../data/keyQAFields'
+import { profileValueForRender } from '../utils/profileValues'
 import type { FirestoreDoc, UserProfile } from '../types/firestore'
 
 type GroupedProfiles = {
@@ -153,21 +154,20 @@ export function Profiles() {
                                 <p key={field.key}>
                                   <span>{field.label}</span>
                                   <strong>
-                                    {
-                                      profile[
-                                        field.name as keyof UserProfile
-                                      ] || '-'
-                                    }
+                                    {profileValueForRender(
+                                      profile[field.name as keyof UserProfile]
+                                    )}
                                   </strong>
                                 </p>
                               ))}
                             </div>
                             <div className="profile-card-footer">
-                              <span>
-                                {profile[
-                                  footerField.name as keyof UserProfile
-                                ] || footerField.label}
-                              </span>
+                                <span>
+                                  {profileValueForRender(
+                                    profile[footerField.name as keyof UserProfile],
+                                    footerField.label
+                                  )}
+                                </span>
                               <span className="profile-pill">View profile</span>
                             </div>
                           </>

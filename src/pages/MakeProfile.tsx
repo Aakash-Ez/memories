@@ -15,6 +15,7 @@ import {
   type KeyQAField,
   keyQAFieldsByBatch,
 } from '../data/keyQAFields'
+import { normalizeProfileValue, profileValueForRender } from '../utils/profileValues'
 
 type FormState = Record<string, string>
 
@@ -56,7 +57,8 @@ export function MakeProfile() {
         .filter((field) => field.name !== 'photoURL')
       setFieldConfig(sortedFields)
       const fieldValues = sortedFields.reduce<Record<string, string>>((acc, field) => {
-        acc[field.name] = profile[field.name as keyof UserProfile] || ''
+        const value = profile[field.name as keyof UserProfile]
+        acc[field.name] = normalizeProfileValue(value)
         return acc
       }, {})
       setForm({
@@ -197,8 +199,10 @@ export function MakeProfile() {
               {fieldConfig.slice(0, 2).map((field) => (
                 <span className="tag-pill" key={field.name}>
                   {form[field.name] ||
-                    profile[field.name as keyof UserProfile] ||
-                    field.placeholder}
+                    profileValueForRender(
+                      profile[field.name as keyof UserProfile],
+                      field.placeholder
+                    )}
                 </span>
               ))}
             </div>

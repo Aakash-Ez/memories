@@ -48,6 +48,7 @@ export function UploadHighlight() {
       return acc
     }, {})
   }, [users])
+  const batch = profile?.batch
   const tagSuggestions = useMemo(() => {
     const normalized = tagSearch.trim().toLowerCase()
     if (!normalized) return []
@@ -71,8 +72,6 @@ export function UploadHighlight() {
   const handleRemoveTag = (userId: string) => {
     setSelectedTags((prev) => prev.filter((id) => id !== userId))
   }
-
-  const batch = profile?.batch
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

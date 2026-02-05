@@ -202,5 +202,6 @@ lines = [
 "  )",
 "}",
 "]",
+]
 
 Path("src/pages/Highlights.tsx").write_text("\n".join(lines) + "\n", encoding="utf-8")

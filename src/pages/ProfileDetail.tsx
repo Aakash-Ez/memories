@@ -17,6 +17,7 @@ import {
   keyQAFieldsByBatch,
   type KeyQAField,
 } from '../data/keyQAFields'
+import { profileValueForRender } from '../utils/profileValues'
 
 export function ProfileDetail({ userId: userIdProp }: { userId?: string } = {}) {
   const { id } = useParams<{ id: string }>()
@@ -180,7 +181,9 @@ export function ProfileDetail({ userId: userIdProp }: { userId?: string } = {}) 
                   <div key={field.name}>
                     <span>{field.label}</span>
                     <strong>
-                      {profile[field.name as keyof UserProfile] || '-'}
+                      {profileValueForRender(
+                        profile[field.name as keyof UserProfile]
+                      )}
                     </strong>
                   </div>
                 ))}
