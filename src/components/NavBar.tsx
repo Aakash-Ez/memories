@@ -1,14 +1,14 @@
-import { collection, doc, query } from 'firebase/firestore'
+import { collection, query } from 'firebase/firestore'
 import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
-import type { FirestoreDoc, JobPosting, UserProfile } from '../types/firestore'
+import type { FirestoreDoc, JobPosting } from '../types/firestore'
 import { isLiveJob } from '../utils/jobPostings'
 import { NAV_ENTITLEMENTS, type EntitlementLevel } from '../data/entitlements'
-import { useDocument } from '../hooks/useDocument'
 import { CURRENT_BATCH_LABEL } from '../data/batchStatus'
+import { useUserProfile } from '../hooks/useUserProfile'
 
 type NavItem = {
   to: string
@@ -26,6 +26,7 @@ const baseNavItems: Readonly<NavItem[]> = [
   { to: '/write-testimonial', label: 'Write testimonial', protected: true },
   { to: '/polls', label: 'Polls', protected: true },
   { to: '/job-postings', label: 'Job postings', protected: true },
+  { to: '/admin/downloads', label: 'Downloads', protected: true },
 ]
 
 const JOB_POSTINGS_NAV_PATH = '/job-postings'
@@ -33,11 +34,7 @@ const JOB_POSTINGS_NAV_PATH = '/job-postings'
 export function NavBar() {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
-  const profileRef = useMemo(
-    () => (user ? doc(db, 'users', user.uid) : null),
-    [user]
-  )
-  const { data: userProfile } = useDocument<FirestoreDoc<UserProfile>>(profileRef)
+  const userProfile = useUserProfile(user)
   const navItems = baseNavItems
   const userRoles = useMemo(() => {
     const roles = new Set<EntitlementLevel>(['all'])
@@ -45,11 +42,11 @@ export function NavBar() {
       if (userProfile.batch) {
         roles.add(userProfile.batch === CURRENT_BATCH_LABEL ? 'current' : 'alum')
       }
-      if (
-        userProfile.role === 'developer' ||
-        userProfile.role === 'admin'
-      ) {
-        roles.add(userProfile.role)
+      if (userProfile.role === 'developer') {
+        roles.add('developer')
+      }
+      if (userProfile.role === 'admin' || userProfile.role === 'CulturalAdmin') {
+        roles.add('admin')
       }
     }
     return roles

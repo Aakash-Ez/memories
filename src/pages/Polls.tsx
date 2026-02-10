@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Poll, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
 import {
   CURRENT_BATCH_LABEL,
   isCurrentBatch,
@@ -33,8 +34,9 @@ export function Polls() {
 
   const usersQuery = useMemo(() => query(collection(db, 'users')), [])
   const { data: users = [] } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const filteredUsers = excludeServiceAccounts(users)
   const usersById = useMemo(() => {
-    return users.reduce<Record<string, UserProfile>>((acc, profile) => {
+    return filteredUsers.reduce<Record<string, UserProfile>>((acc, profile) => {
       acc[profile.id] = profile
       return acc
     }, {})
@@ -65,7 +67,7 @@ export function Polls() {
         buckets[pollId] = []
         return
       }
-      buckets[pollId] = users
+      buckets[pollId] = filteredUsers
         .filter(
           (candidate) =>
             candidate.batch === currentUserBatch &&

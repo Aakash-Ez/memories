@@ -8,7 +8,7 @@ type CollectionState<T> = {
   error: string | null
 }
 
-export function useCollection<T>(queryRef: Query<DocumentData>) {
+export function useCollection<T>(queryRef: Query<DocumentData> | null) {
   const [state, setState] = useState<CollectionState<T>>({
     data: [],
     loading: true,
@@ -16,6 +16,15 @@ export function useCollection<T>(queryRef: Query<DocumentData>) {
   })
 
   useEffect(() => {
+    if (!queryRef) {
+      setState({
+        data: [],
+        loading: false,
+        error: null,
+      })
+      return undefined
+    }
+
     const unsubscribe = onSnapshot(
       queryRef,
       (snapshot) => {

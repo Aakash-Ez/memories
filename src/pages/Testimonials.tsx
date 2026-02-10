@@ -6,6 +6,7 @@ import { SectionHeader } from '../components/SectionHeader'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Testimonial, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
 
 export function Testimonials() {
   const testimonialsQuery = useMemo(
@@ -18,13 +19,14 @@ export function Testimonials() {
     testimonialsQuery
   )
   const { data: users } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const filteredUsers = useMemo(() => excludeServiceAccounts(users), [users])
 
   const usersById = useMemo(() => {
-    return users.reduce<Record<string, UserProfile>>((acc, user) => {
+    return filteredUsers.reduce<Record<string, UserProfile>>((acc, user) => {
       acc[user.id] = user
       return acc
     }, {})
-  }, [users])
+  }, [filteredUsers])
 
   return (
     <div className="page">

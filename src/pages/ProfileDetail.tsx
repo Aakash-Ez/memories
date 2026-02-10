@@ -10,6 +10,7 @@ import { useCollection } from '../hooks/useCollection'
 import { useDocument } from '../hooks/useDocument'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Highlight, Testimonial, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
 import { useAuth } from '../context/AuthContext'
 import {
   defaultKeyQAFields,
@@ -67,13 +68,14 @@ export function ProfileDetail({ userId: userIdProp }: { userId?: string } = {}) 
   const testimonials = useCollection<FirestoreDoc<Testimonial>>(testimonialsQuery)
   const usersQuery = useMemo(() => query(collection(db, 'users')), [])
   const { data: users } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const filteredUsers = useMemo(() => excludeServiceAccounts(users), [users])
 
   const usersById = useMemo(() => {
-    return users.reduce<Record<string, UserProfile>>((acc, user) => {
+    return filteredUsers.reduce<Record<string, UserProfile>>((acc, user) => {
       acc[user.id] = user
       return acc
     }, {})
-  }, [users])
+  }, [filteredUsers])
 
   const highlights = useMemo(() => {
     const map = new Map<string, FirestoreDoc<Highlight>>()

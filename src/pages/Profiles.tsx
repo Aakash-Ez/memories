@@ -12,6 +12,7 @@ import {
 } from '../data/keyQAFields'
 import { profileValueForRender } from '../utils/profileValues'
 import { PROFESSIONAL_INTEREST_AREAS } from '../data/professionalDetails'
+import { excludeServiceAccounts } from '../utils/userFilters'
 import type { FirestoreDoc, UserProfile } from '../types/firestore'
 
 type GroupedProfiles = {
@@ -34,9 +35,10 @@ export function Profiles() {
   const [roleFilter, setRoleFilter] = useState('')
   const [interestFilter, setInterestFilter] = useState('')
 
+  const validProfiles = useMemo(() => excludeServiceAccounts(data), [data])
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return data
+    return validProfiles
       .filter((profile) => {
         if (!term) return true
         return [profile.name, profile.nickname]

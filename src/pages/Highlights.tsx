@@ -7,6 +7,7 @@ import { SectionHeader } from '../components/SectionHeader'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Highlight, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
 
 const HIGHLIGHTS_PER_BATCH = 20
 
@@ -32,9 +33,10 @@ export function Highlights() {
     highlightsQuery
   )
   const { data: users } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const filteredUsers = excludeServiceAccounts(users)
 
   const usersById = useMemo(() => {
-    return users.reduce<Record<string, UserProfile>>((acc, user) => {
+    return filteredUsers.reduce<Record<string, UserProfile>>((acc, user) => {
       acc[user.id] = user
       return acc
     }, {})

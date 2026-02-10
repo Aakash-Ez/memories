@@ -14,6 +14,7 @@ import { MakeProfile } from './pages/MakeProfile'
 import { JobPostings } from './pages/JobPostings'
 import { Blogs } from './pages/Blogs'
 import { WriteBlog } from './pages/WriteBlog'
+import { CulturalDownloads } from './pages/CulturalDownloads'
 import './App.css'
 
 function App() {
@@ -95,6 +96,14 @@ function App() {
               element={
                 <RequireAuth>
                   <WriteBlog />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/downloads"
+              element={
+                <RequireAuth>
+                  <CulturalDownloads />
                 </RequireAuth>
               }
             />

@@ -33,6 +33,7 @@ export type UserProfile = {
   interestAreas?: string[]
   linkedinURL?: string
   role?: 'developer' | 'admin'
+  profileType?: string
 }
 
 export type Highlight = {
@@ -54,6 +55,7 @@ export type Testimonial = {
   show?: boolean
   rank?: number
   reactions?: Record<string, string>
+  batch?: string
 }
 
 export type DisappearingMessage = {

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
+import { useUserProfile } from '../hooks/useUserProfile'
 
 export function WriteTestimonial() {
   const { user } = useAuth()
@@ -14,6 +16,7 @@ export function WriteTestimonial() {
   )
 
   const { data: users } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const cleanUsers = useMemo(() => excludeServiceAccounts(users), [users])
   const [receiverId, setReceiverId] = useState<string>('')
   const [content, setContent] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -21,18 +24,19 @@ export function WriteTestimonial() {
   const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const currentUserProfile = users.find((profile) => profile.id === user?.uid)
-  const currentBatch = currentUserProfile?.batch
+  const writerProfile = useUserProfile(user)
+  const fallbackBatch = cleanUsers.find((profile) => profile.id === user?.uid)?.batch
+  const currentBatch = writerProfile?.batch ?? fallbackBatch
 
-  const filteredUsers = useMemo(() => {
-    if (!searchTerm.trim()) return users.filter((profile) => profile.batch === currentBatch)
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) return cleanUsers.filter((profile) => profile.batch === currentBatch)
     const term = searchTerm.trim().toLowerCase()
-    return users.filter(
+    return cleanUsers.filter(
       (profile) =>
         profile.batch === currentBatch &&
         `${profile.name} ${profile.nickname || ''}`.toLowerCase().includes(term)
     )
-  }, [users, searchTerm, currentBatch])
+  }, [cleanUsers, searchTerm, currentBatch])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -51,7 +55,7 @@ export function WriteTestimonial() {
       return
     }
 
-    const recipient = users.find((profile) => profile.id === receiverId)
+    const recipient = cleanUsers.find((profile) => profile.id === receiverId)
     if (recipient?.batch !== currentBatch) {
       setError('You can only write for your batchmates.')
       return
@@ -67,6 +71,7 @@ export function WriteTestimonial() {
         timestamp: serverTimestamp(),
         approved: false,
         show: false,
+        batch: currentBatch ?? null,
       })
       setStatus('Testimonial recorded. Approval may take a moment.')
       setContent('')
@@ -82,7 +87,7 @@ export function WriteTestimonial() {
     }
   }
 
-  const selectedProfile = users.find((profile) => profile.id === receiverId)
+  const selectedProfile = cleanUsers.find((profile) => profile.id === receiverId)
 
   return (
     <div className="page">
@@ -116,7 +121,7 @@ export function WriteTestimonial() {
                 onChange={(event) => setReceiverId(event.target.value)}
               >
                 <option value="">Choose a peer</option>
-                {filteredUsers.map((profile) => (
+                {searchResults.map((profile) => (
                   <option key={profile.id} value={profile.id}>
                     {profile.name} {profile.nickname ? `(${profile.nickname})` : ''}
                   </option>

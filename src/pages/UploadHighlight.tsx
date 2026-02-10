@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { db, storage } from '../lib/firebase'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import type { FirestoreDoc, Highlight, UserProfile } from '../types/firestore'
+import { excludeServiceAccounts } from '../utils/userFilters'
 
 export function UploadHighlight() {
   const { user } = useAuth()
@@ -42,17 +43,18 @@ export function UploadHighlight() {
 
   const usersQuery = useMemo(() => query(collection(db, 'users')), [])
   const { data: users = [] } = useCollection<FirestoreDoc<UserProfile>>(usersQuery)
+  const filteredUsers = useMemo(() => excludeServiceAccounts(users), [users])
   const usersById = useMemo(() => {
-    return users.reduce<Record<string, UserProfile>>((acc, item) => {
+    return filteredUsers.reduce<Record<string, UserProfile>>((acc, item) => {
       acc[item.id] = item
       return acc
     }, {})
-  }, [users])
+  }, [filteredUsers])
   const batch = profile?.batch
   const tagSuggestions = useMemo(() => {
     const normalized = tagSearch.trim().toLowerCase()
     if (!normalized) return []
-    const pool = users.filter((candidate) => !selectedTags.includes(candidate.id))
+    const pool = filteredUsers.filter((candidate) => !selectedTags.includes(candidate.id))
     return pool
       .filter((candidate) => {
         const name = candidate.name?.toLowerCase() ?? ''
