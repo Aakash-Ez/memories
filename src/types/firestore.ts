@@ -32,7 +32,7 @@ export type UserProfile = {
   currentRole?: string
   interestAreas?: string[]
   linkedinURL?: string
-  role?: 'developer' | 'admin'
+  role?: 'developer' | 'admin' | 'CulturalAdmin'
   profileType?: string
 }
 

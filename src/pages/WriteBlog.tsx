@@ -4,7 +4,7 @@ import { Card } from '../components/Card'
 import { SectionHeader } from '../components/SectionHeader'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebase'
-import { BLOG_CATEGORIES } from '../data/blogCategories'
+import { BLOG_CATEGORIES, type BlogCategory } from '../data/blogCategories'
 import type { BlogPost } from '../types/firestore'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -12,7 +12,7 @@ import StarterKit from '@tiptap/starter-kit'
 export function WriteBlog() {
   const { user } = useAuth()
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState(BLOG_CATEGORIES[0])
+  const [category, setCategory] = useState<BlogCategory>(BLOG_CATEGORIES[0])
   const [body, setBody] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -109,7 +109,7 @@ export function WriteBlog() {
             Category
             <select
               value={category}
-              onChange={(event) => setCategory(event.target.value)}
+              onChange={(event) => setCategory(event.target.value as BlogCategory)}
               className="category-select"
             >
               {BLOG_CATEGORIES.map((option) => (
