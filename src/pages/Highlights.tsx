@@ -1,4 +1,3 @@
-
 import { collection, orderBy, query } from 'firebase/firestore'
 import { useMemo, useState } from 'react'
 import { CachedImage } from '../components/CachedImage'
@@ -8,6 +7,19 @@ import { SectionHeader } from '../components/SectionHeader'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Highlight, UserProfile } from '../types/firestore'
+
+const HIGHLIGHTS_PER_BATCH = 20
+
+type GroupedHighlights = {
+  batch: string
+  highlights: FirestoreDoc<Highlight>[]
+}
+
+type BatchDisplayGroup = GroupedHighlights & {
+  limit: number
+  topHighlights: FirestoreDoc<Highlight>[]
+  hasMore: boolean
+}
 
 export function Highlights() {
   const highlightsQuery = useMemo(
@@ -34,24 +46,36 @@ export function Highlights() {
     () => data.filter((highlight) => Boolean(highlight.image || highlight.directlink)),
     [data]
   )
-  const [highlightLimit, setHighlightLimit] = useState(20)
-  const pagedHighlights = useMemo(
-    () => visibleHighlights.slice(0, highlightLimit),
-    [visibleHighlights, highlightLimit]
-  )
+  const [batchVisibleCounts, setBatchVisibleCounts] = useState<Record<string, number>>({})
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
-  const groupedByBatch = useMemo(() => {
+  const groupedByBatch = useMemo<GroupedHighlights[]>(() => {
     const buckets: Record<string, FirestoreDoc<Highlight>[]> = {}
-    pagedHighlights.forEach((highlight) => {
+    visibleHighlights.forEach((highlight) => {
       const bucket = highlight.batch || 'Unassigned'
       if (!buckets[bucket]) buckets[bucket] = []
       buckets[bucket].push(highlight)
     })
     return Object.entries(buckets)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([batch, highlights]) => ({ batch, highlights }))
-  }, [pagedHighlights])
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([batch, highlights]) => ({
+        batch,
+        highlights,
+      }))
+  }, [visibleHighlights])
+
+  const displayGroups = useMemo<BatchDisplayGroup[]>(() => {
+    return groupedByBatch.map((group) => {
+      const limit = batchVisibleCounts[group.batch] ?? HIGHLIGHTS_PER_BATCH
+      const topHighlights = group.highlights.slice(0, limit)
+      return {
+        ...group,
+        limit,
+        topHighlights,
+        hasMore: group.highlights.length > limit,
+      }
+    })
+  }, [groupedByBatch, batchVisibleCounts])
 
   return (
     <div className="page">
@@ -68,8 +92,8 @@ export function Highlights() {
           emptyLabel="No highlights yet."
         />
       ) : (
-      <div className="batch-stack">
-        {groupedByBatch.map((group) => (
+        <div className="batch-stack">
+          {displayGroups.map((group) => (
             <section key={group.batch} className="batch-section">
               <button
                 type="button"
@@ -97,8 +121,8 @@ export function Highlights() {
                     </p>
                   </div>
                   <div className="wall-grid">
-                  {group.highlights.map((highlight) => {
-                    const imageUrl = highlight.directlink || highlight.image
+                    {group.topHighlights.map((highlight) => {
+                      const imageUrl = highlight.directlink || highlight.image
                       if (!imageUrl) return null
 
                       return (
@@ -123,24 +147,30 @@ export function Highlights() {
                       )
                     })}
                   </div>
+                  {group.hasMore ? (
+                    <div className="load-more-row">
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() =>
+                          setBatchVisibleCounts((prev) => ({
+                            ...prev,
+                            [group.batch]:
+                              (prev[group.batch] ?? HIGHLIGHTS_PER_BATCH) +
+                              HIGHLIGHTS_PER_BATCH,
+                          }))
+                        }
+                      >
+                        Load more {group.batch} highlights
+                      </button>
+                    </div>
+                  ) : null}
                 </section>
               ) : null}
             </section>
           ))}
         </div>
       )}
-
-      {visibleHighlights.length > highlightLimit ? (
-        <div className="load-more-row">
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setHighlightLimit((prev) => prev + 20)}
-          >
-            Load more highlights
-          </button>
-        </div>
-      ) : null}
 
       {selected ? (
         <ImageModal

@@ -15,6 +15,8 @@ import {
   type KeyQAField,
   keyQAFieldsByBatch,
 } from '../data/keyQAFields'
+import { PROFESSIONAL_INTEREST_AREAS } from '../data/professionalDetails'
+import { isCurrentBatch } from '../data/batchStatus'
 import { normalizeProfileValue, profileValueForRender } from '../utils/profileValues'
 
 type FormState = Record<string, string>
@@ -32,6 +34,12 @@ export function MakeProfile() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [professionalDetails, setProfessionalDetails] = useState({
+    currentCompany: '',
+    currentRole: '',
+    linkedinURL: '',
+    interestAreas: [] as string[],
+  })
 
   useEffect(() => {
     if (profile) {
@@ -69,8 +77,28 @@ export function MakeProfile() {
       if (!photoFile) {
         setPhotoPreview(profile.photoURL || null)
       }
+      setProfessionalDetails({
+        currentCompany: profile.currentCompany || '',
+        currentRole: profile.currentRole || '',
+        linkedinURL: profile.linkedinURL || '',
+        interestAreas: profile.interestAreas ?? [],
+      })
     }
   }, [profile, photoFile])
+
+  const showProfessionalDetails = Boolean(profile && !isCurrentBatch(profile.batch))
+
+  const toggleInterestArea = (area: string) => {
+    setProfessionalDetails((prev) => {
+      const exists = prev.interestAreas.includes(area)
+      return {
+        ...prev,
+        interestAreas: exists
+          ? prev.interestAreas.filter((item) => item !== area)
+          : [...prev.interestAreas, area],
+      }
+    })
+  }
 
   useEffect(
     () => () => {
@@ -128,6 +156,13 @@ export function MakeProfile() {
           }
           return acc
         }, {}),
+        currentCompany: professionalDetails.currentCompany.trim() || undefined,
+        currentRole: professionalDetails.currentRole.trim() || undefined,
+        linkedinURL: professionalDetails.linkedinURL.trim() || undefined,
+        interestAreas:
+          professionalDetails.interestAreas.length > 0
+            ? professionalDetails.interestAreas
+            : undefined,
       }
 
       await updateDoc(userRef, payload)
@@ -257,9 +292,76 @@ export function MakeProfile() {
                   }
                   placeholder={field.placeholder}
                 />
-              )}
+            )}
+          </label>
+        ))}
+        {showProfessionalDetails ? (
+          <div className="professional-section">
+            <h3>Professional details</h3>
+            <p className="meta subtle">Available only for alumni batches</p>
+            <label className="auth-field">
+              Current company
+              <input
+                type="text"
+                value={professionalDetails.currentCompany}
+                onChange={(event) =>
+                  setProfessionalDetails((prev) => ({
+                    ...prev,
+                    currentCompany: event.target.value,
+                  }))
+                }
+                placeholder="Where are you working now?"
+              />
             </label>
-          ))}
+            <label className="auth-field">
+              Current role
+              <input
+                type="text"
+                value={professionalDetails.currentRole}
+                onChange={(event) =>
+                  setProfessionalDetails((prev) => ({
+                    ...prev,
+                    currentRole: event.target.value,
+                  }))
+                }
+                placeholder="What is your role title?"
+              />
+            </label>
+            <label className="auth-field">
+              LinkedIn URL
+              <input
+                type="url"
+                value={professionalDetails.linkedinURL}
+                onChange={(event) =>
+                  setProfessionalDetails((prev) => ({
+                    ...prev,
+                    linkedinURL: event.target.value,
+                  }))
+                }
+                placeholder="https://linkedin.com/in/you"
+              />
+            </label>
+            <div className="professional-interest">
+              <p className="auth-field-label">Interest areas</p>
+              <div className="interest-grid">
+                {PROFESSIONAL_INTEREST_AREAS.map((area) => (
+                  <button
+                    type="button"
+                    key={area}
+                    className={`tag-pill tag-suggestion ${
+                      professionalDetails.interestAreas.includes(area)
+                        ? 'tag-selected'
+                        : ''
+                    }`}
+                    onClick={() => toggleInterestArea(area)}
+                  >
+                    {area}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
           {statusMessage ? <p className="state-pill">{statusMessage}</p> : null}
           {saveError ? <p className="state-pill state-error">{saveError}</p> : null}
           <div className="auth-actions">

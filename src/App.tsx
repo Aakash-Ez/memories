@@ -11,6 +11,9 @@ import { Profiles } from './pages/Profiles'
 import { UploadHighlight } from './pages/UploadHighlight'
 import { WriteTestimonial } from './pages/WriteTestimonial'
 import { MakeProfile } from './pages/MakeProfile'
+import { JobPostings } from './pages/JobPostings'
+import { Blogs } from './pages/Blogs'
+import { WriteBlog } from './pages/WriteBlog'
 import './App.css'
 
 function App() {
@@ -74,6 +77,24 @@ function App() {
               element={
                 <RequireAuth>
                   <Polls />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/job-postings"
+              element={
+                <RequireAuth>
+                  <JobPostings />
+                </RequireAuth>
+              }
+            />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route
+              path="/write-blog"
+              element={
+                <RequireAuth>
+                  <WriteBlog />
                 </RequireAuth>
               }
             />

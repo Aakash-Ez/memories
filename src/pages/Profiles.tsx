@@ -11,6 +11,7 @@ import {
   keyQAFieldsByBatch,
 } from '../data/keyQAFields'
 import { profileValueForRender } from '../utils/profileValues'
+import { PROFESSIONAL_INTEREST_AREAS } from '../data/professionalDetails'
 import type { FirestoreDoc, UserProfile } from '../types/firestore'
 
 type GroupedProfiles = {
@@ -29,16 +30,43 @@ export function Profiles() {
   )
   const [search, setSearch] = useState('')
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [companyFilter, setCompanyFilter] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [interestFilter, setInterestFilter] = useState('')
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return data
-    return data.filter((profile) =>
-      [profile.name, profile.nickname]
-        .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(term))
-    )
-  }, [data, search])
+    return data
+      .filter((profile) => {
+        if (!term) return true
+        return [profile.name, profile.nickname]
+          .filter(Boolean)
+          .some((value) => value?.toLowerCase().includes(term))
+      })
+      .filter((profile) => {
+        const companyTerm = companyFilter.trim().toLowerCase()
+        if (companyTerm) {
+          const company = profile.currentCompany?.toLowerCase() || ''
+          if (!company.includes(companyTerm)) {
+            return false
+          }
+        }
+        const roleTerm = roleFilter.trim().toLowerCase()
+        if (roleTerm) {
+          const role = profile.currentRole?.toLowerCase() || ''
+          if (!role.includes(roleTerm)) {
+            return false
+          }
+        }
+        if (interestFilter) {
+          const interests = profile.interestAreas ?? []
+          if (!interests.includes(interestFilter)) {
+            return false
+          }
+        }
+        return true
+      })
+  }, [data, search, companyFilter, roleFilter, interestFilter])
 
   const grouped = useMemo<GroupedProfiles[]>(() => {
     const buckets = filtered.reduce<Record<string, FirestoreDoc<UserProfile>[]>>(
@@ -52,7 +80,7 @@ export function Profiles() {
     )
 
     return Object.entries(buckets)
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => b.localeCompare(a))
       .map(([batch, profiles]) => ({
         batch,
         profiles,
@@ -81,6 +109,40 @@ export function Profiles() {
           <span>{filtered.length} students</span>
           <span>{grouped.length} batches</span>
         </div>
+      </div>
+      <div className="profiles-filters">
+        <label>
+          Company
+          <input
+            type="search"
+            placeholder="Filter by company"
+            value={companyFilter}
+            onChange={(event) => setCompanyFilter(event.target.value)}
+          />
+        </label>
+        <label>
+          Role
+          <input
+            type="search"
+            placeholder="Filter by role"
+            value={roleFilter}
+            onChange={(event) => setRoleFilter(event.target.value)}
+          />
+        </label>
+        <label>
+          Interest area
+          <select
+            value={interestFilter}
+            onChange={(event) => setInterestFilter(event.target.value)}
+          >
+            <option value="">All</option>
+            {PROFESSIONAL_INTEREST_AREAS.map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {filtered.length === 0 ? (

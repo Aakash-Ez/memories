@@ -28,6 +28,11 @@ export type UserProfile = {
   ImportantHighlights?: string[] | FieldValue
   createdAt?: string
   KeyQA?: Record<string, { Name: string; Key: number }>
+  currentCompany?: string
+  currentRole?: string
+  interestAreas?: string[]
+  linkedinURL?: string
+  role?: 'developer' | 'admin'
 }
 
 export type Highlight = {
@@ -84,4 +89,36 @@ export type ForumMessage = {
   userName?: string
   userPhoto?: string
   timestamp?: unknown
+}
+
+export type JobPosting = {
+  jobTitle: string
+  company: string
+  workExperience: string
+  domain: string
+  jobDescription: string
+  location?: string
+  postedAt?: unknown
+  createdAt?: unknown
+  closingDate?: unknown
+}
+
+export type JobApplication = {
+  jobId: string
+  jobTitle: string
+  applicantId: string
+  applicantName?: string | null
+  applicantEmail?: string | null
+  resumeUrl: string
+  message?: string
+  appliedAt?: unknown
+}
+
+export type BlogPost = {
+  title: string
+  body: string
+  authorId: string
+  authorName: string
+  category: string
+  createdAt?: unknown
 }

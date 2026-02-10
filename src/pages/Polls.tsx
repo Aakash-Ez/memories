@@ -13,10 +13,10 @@ import { useAuth } from '../context/AuthContext'
 import { useCollection } from '../hooks/useCollection'
 import { db } from '../lib/firebase'
 import type { FirestoreDoc, Poll, UserProfile } from '../types/firestore'
-
-const SOM26_LABEL = 'SOM26'
-
-const isSOM26 = (batch?: string) => batch === SOM26_LABEL
+import {
+  CURRENT_BATCH_LABEL,
+  isCurrentBatch,
+} from '../data/batchStatus'
 
 const getWinningOptions = (options?: Poll['options']) => {
   if (!options?.length) return []
@@ -54,30 +54,35 @@ export function Polls() {
   }, [data])
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTermByPoll, setSearchTermByPoll] = useState<Record<string, string>>({})
 
   const currentUserBatch = user ? usersById[user.uid]?.batch : undefined
-  const filteredUsers = useMemo(() => {
-    const filter = searchTerm.trim().toLowerCase()
-    if (!filter) {
-      return []
-    }
-    return users
-      .filter(
-        (candidate) =>
-          candidate.batch === currentUserBatch &&
-          (() => {
-            const name = candidate.name?.toLowerCase() ?? ''
-            const email = candidate.email?.toLowerCase() ?? ''
-            return name.includes(filter) || email.includes(filter)
-          })()
-      )
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-      .slice(0, 32)
-  }, [users, searchTerm])
+  const filteredUsersByPoll = useMemo(() => {
+    const buckets: Record<string, FirestoreDoc<UserProfile>[]> = {}
+    Object.entries(searchTermByPoll).forEach(([pollId, term]) => {
+      const filter = term.trim().toLowerCase()
+      if (!filter) {
+        buckets[pollId] = []
+        return
+      }
+      buckets[pollId] = users
+        .filter(
+          (candidate) =>
+            candidate.batch === currentUserBatch &&
+            (() => {
+              const name = candidate.name?.toLowerCase() ?? ''
+              const email = candidate.email?.toLowerCase() ?? ''
+              return name.includes(filter) || email.includes(filter)
+            })()
+        )
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        .slice(0, 32)
+    })
+    return buckets
+  }, [users, searchTermByPoll, currentUserBatch])
 
   const voteForUser = async (pollId: string, userId: string) => {
-    if (!user || currentUserBatch !== SOM26_LABEL) return
+    if (!user || !isCurrentBatch(currentUserBatch)) return
     const pollRef = doc(db, 'polls', pollId)
     await runTransaction(db, async (tx) => {
       const snapshot = await tx.get(pollRef)
@@ -87,7 +92,7 @@ export function Polls() {
       if (
         !targetCandidate ||
         targetCandidate.batch !== currentUserBatch ||
-        currentUserBatch !== SOM26_LABEL
+        !isCurrentBatch(currentUserBatch)
       ) {
         return
       }
@@ -178,12 +183,14 @@ export function Polls() {
                         <div className="poll-card">
                           <h3>{poll.question}</h3>
                           <p className="meta">Total votes: {totalVotes || 0}</p>
-                          {!isSOM26(batch) ? (
+                          {!isCurrentBatch(batch) ? (
                             <p className="meta">Showing winner(s) only</p>
                           ) : null}
                           <div className="poll-options">
                             {(
-                              isSOM26(batch) ? poll.options : getWinningOptions(poll.options)
+                              isCurrentBatch(batch)
+                                ? poll.options
+                                : getWinningOptions(poll.options)
                             )?.map((option) => {
                               const percent = totalVotes
                                 ? Math.round(((option.votes || 0) / totalVotes) * 100)
@@ -205,11 +212,11 @@ export function Polls() {
                               )
                             })}
                           </div>
-                          {isSOM26(batch) ? (
+                          {isCurrentBatch(batch) ? (
                             <div className="batchmate-vote-shell">
-                              {currentUserBatch !== SOM26_LABEL ? (
+                              {!isCurrentBatch(currentUserBatch) ? (
                                 <p className="meta accent">
-                                  Only SOM26 batchmates can vote here.
+                                  Only {CURRENT_BATCH_LABEL} batchmates can vote here.
                                 </p>
                               ) : (
                                 userVote ? (
@@ -225,12 +232,17 @@ export function Polls() {
                                 type="text"
                                 className="tag-search"
                                 placeholder="Search batchmates"
-                                value={searchTerm}
-                                onChange={(event) => setSearchTerm(event.target.value)}
-                                disabled={currentUserBatch !== SOM26_LABEL}
+                                value={searchTermByPoll[poll.id] ?? ''}
+                                onChange={(event) =>
+                                  setSearchTermByPoll((prev) => ({
+                                    ...prev,
+                                    [poll.id]: event.target.value,
+                                  }))
+                                }
+                                disabled={!isCurrentBatch(currentUserBatch)}
                               />
                               <div className="batchmate-grid">
-                                {filteredUsers.map((batchmate) => (
+                                {(filteredUsersByPoll[poll.id] ?? []).map((batchmate) => (
                                   <button
                                     key={batchmate.id}
                                     type="button"
@@ -240,9 +252,7 @@ export function Polls() {
                                         : ''
                                     }`}
                                     onClick={() => voteForUser(poll.id, batchmate.id)}
-                                    disabled={
-                                      !user || currentUserBatch !== SOM26_LABEL
-                                    }
+                                    disabled={!user || !isCurrentBatch(currentUserBatch)}
                                   >
                                     {batchmate.name || batchmate.email || 'Batchmate'}
                                   </button>

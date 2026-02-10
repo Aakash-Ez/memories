@@ -8,7 +8,7 @@ type DocumentState<T> = {
   error: string | null
 }
 
-export function useDocument<T>(docRef: DocumentReference<DocumentData>) {
+export function useDocument<T>(docRef: DocumentReference<DocumentData> | null) {
   const [state, setState] = useState<DocumentState<T>>({
     data: null,
     loading: true,
@@ -16,6 +16,11 @@ export function useDocument<T>(docRef: DocumentReference<DocumentData>) {
   })
 
   useEffect(() => {
+    if (!docRef) {
+      setState({ data: null, loading: false, error: null })
+      return
+    }
+
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {

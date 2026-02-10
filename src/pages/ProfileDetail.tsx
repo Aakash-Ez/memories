@@ -18,6 +18,7 @@ import {
   type KeyQAField,
 } from '../data/keyQAFields'
 import { profileValueForRender } from '../utils/profileValues'
+import { isCurrentBatch } from '../data/batchStatus'
 
 export function ProfileDetail({ userId: userIdProp }: { userId?: string } = {}) {
   const { id } = useParams<{ id: string }>()
@@ -191,6 +192,38 @@ export function ProfileDetail({ userId: userIdProp }: { userId?: string } = {}) 
 
             </div>
           </div>
+          {!isCurrentBatch(profile.batch) ? (
+            <div className="professional-details-card">
+              <h3>Professional details</h3>
+              <div className="professional-details-row">
+                <div>
+                  <p className="meta subtle">Current company</p>
+                  <strong>{profile.currentCompany || 'Not shared'}</strong>
+                </div>
+                <div>
+                  <p className="meta subtle">Current role</p>
+                  <strong>{profile.currentRole || 'Not shared'}</strong>
+                </div>
+              </div>
+              {profile.linkedinURL ? (
+                <div className="professional-details-link">
+                  <span>LinkedIn</span>
+                  <a href={profile.linkedinURL} target="_blank" rel="noreferrer">
+                    View profile
+                  </a>
+                </div>
+              ) : null}
+              {profile.interestAreas?.length ? (
+                <div className="interest-grid">
+                  {profile.interestAreas.map((area) => (
+                    <span className="interest-chip" key={area}>
+                      {area}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </Card>
       ) : (
         <ListState loading={false} error={null} emptyLabel="Profile not found." />
