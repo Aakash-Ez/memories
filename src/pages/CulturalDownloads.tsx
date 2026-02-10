@@ -1,4 +1,4 @@
-import { collection, orderBy, query, where } from 'firebase/firestore'
+import { collection, orderBy, query } from 'firebase/firestore'
 import { useMemo, useState } from 'react'
 import { Card } from '../components/Card'
 import { ListState } from '../components/ListState'
@@ -9,6 +9,19 @@ import type { FirestoreDoc, Highlight, Testimonial } from '../types/firestore'
 
 const buildCSV = (rows: string[][]) =>
   rows.map((row) => row.map((cell) => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n')
+
+const formatTimestamp = (value: unknown) => {
+  if (!value) return ''
+  if (value instanceof Date) return value.toISOString()
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate().toISOString()
+  }
+  try {
+    return new Date(value as string | number).toISOString()
+  } catch {
+    return ''
+  }
+}
 
 const downloadFile = (filename: string, content: string, type = 'text/csv') => {
   const blob = new Blob([content], { type })
@@ -62,7 +75,7 @@ export function CulturalDownloads() {
         testimonial.testimonial,
         testimonial.writer,
         testimonial.receiver,
-        new Date(testimonial.timestamp?.toDate?.() ?? testimonial.timestamp ?? Date.now()).toISOString(),
+        formatTimestamp(testimonial.timestamp),
       ]),
     ]
     downloadFile(
@@ -78,7 +91,7 @@ export function CulturalDownloads() {
         highlight.caption,
         highlight.batch || 'Unassigned',
         highlight.userId,
-        new Date(highlight.timestamp?.toDate?.() ?? highlight.timestamp ?? Date.now()).toISOString(),
+        formatTimestamp(highlight.timestamp),
         (highlight.tags || []).join('|'),
         highlight.image || highlight.directlink || '',
       ]),
