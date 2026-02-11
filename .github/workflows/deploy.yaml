@@ -24,6 +24,14 @@ jobs:
           node-version: '20' # Uses a modern Node version
 
       # 3. Install dependencies and Build
+      - name: Verify env vars
+        run: |
+          if [ -z "$VITE_FIREBASE_API_KEY" ]; then echo "API_KEY is MISSING"; else echo "API_KEY is set"; fi
+          if [ -z "$VITE_FIREBASE_PROJECT_ID" ]; then echo "PROJECT_ID is MISSING"; else echo "PROJECT_ID is set"; fi
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
       - name: Install and Build
         run: |
           npm ci
