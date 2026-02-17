@@ -10,7 +10,7 @@ export type KeyQAField = {
 export const keyQAFieldsByBatch: Record<string, KeyQAField[]> = {
   SOM25: [
     {
-      label: 'Best memory',
+      label: 'bestMemory',
       name: 'bestMemory',
       key: 0,
       placeholder: "Something you'll never forget",
@@ -68,7 +68,6 @@ export const keyQAFieldsByBatch: Record<string, KeyQAField[]> = {
       name: 'memorableMoment',
       key: 2,
       placeholder: 'A SOM memory you treasure',
-      type: 'textarea',
       rows: 3,
     },
     {
