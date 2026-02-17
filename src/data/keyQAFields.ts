@@ -18,7 +18,7 @@ export const keyQAFieldsByBatch: Record<string, KeyQAField[]> = {
       rows: 3,
     },
     {
-      label: 'Favorite spot',
+      label: 'favorite spot',
       name: 'favoriteSpot',
       key: 1,
       placeholder: 'Where did you pass the time?',
@@ -58,13 +58,13 @@ export const keyQAFieldsByBatch: Record<string, KeyQAField[]> = {
   ],
   SOM26: [
     {
-      label: 'Favorite spot',
+      label: 'Your favorite spot on campus',
       name: 'favoriteSpot',
       key: 1,
       placeholder: 'Where do you pause on campus?',
     },
     {
-      label: 'Most memorable moment',
+      label: 'A SOM memory you treasure',
       name: 'memorableMoment',
       key: 2,
       placeholder: 'A SOM memory you treasure',
@@ -72,37 +72,37 @@ export const keyQAFieldsByBatch: Record<string, KeyQAField[]> = {
       rows: 3,
     },
     {
-      label: 'Bollywood title',
+      label: 'If your personality was a bollywood movie title, what would it be?',
       name: 'bollywoodTitle',
       key: 3,
       placeholder: 'Give your journey a film name',
     },
     {
-      label: 'Comfort zone',
+      label: 'Describe your MBA life in one word',
       name: 'comfortZone',
       key: 4,
       placeholder: 'In one word',
     },
     {
-      label: 'If you were famous for one thing',
+      label: 'If you were famous for one thing, what would it be?',
       name: 'famousFor',
       key: 5,
       placeholder: 'What would that be?',
     },
     {
-      label: 'Favorite session',
+      label: 'A faculty / guest session you will never forget',
       name: 'favoriteSession',
       key: 6,
       placeholder: 'Faculty or guest session?',
     },
     {
-      label: 'Go-to hobby',
+      label: 'What's your go-to hobby?',
       name: 'hobby',
       key: 7,
       placeholder: 'What keeps you busy outside classes?',
     },
     {
-      label: 'Hostel & room',
+      label: 'Hostel & room number',
       name: 'hostelRoom',
       key: 8,
       placeholder: 'Where do you crash at night?',
