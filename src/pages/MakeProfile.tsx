@@ -48,15 +48,15 @@ export function MakeProfile() {
       const hasKeyQA = Object.keys(rawKeyQA).length > 0
       const baseFields = keyQAFieldsByBatch[batchKey] ?? defaultKeyQAFields
       const dynamicFields: KeyQAField[] = hasKeyQA
-        ? Object.entries(rawKeyQA).map(([label, entry]) => {
-            const meta = keyQAMetadataByLabel[label]
+        ? Object.entries(rawKeyQA).map(([storedLabel, entry]) => {
+            const matchingField = baseFields.find((field) => field.name === entry.Name)
             return {
-              label,
+              label: matchingField?.label ?? storedLabel,
               name: entry.Name,
               key: entry.Key,
-              placeholder: meta?.placeholder,
-              type: meta?.type,
-              rows: meta?.rows,
+              placeholder: matchingField?.placeholder,
+              type: matchingField?.type,
+              rows: matchingField?.rows,
             }
           })
         : baseFields
