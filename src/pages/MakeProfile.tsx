@@ -11,7 +11,6 @@ import { useDocument } from '../hooks/useDocument'
 import type { FirestoreDoc, UserProfile } from '../types/firestore'
 import {
   defaultKeyQAFields,
-  keyQAMetadataByLabel,
   type KeyQAField,
   keyQAFieldsByBatch,
 } from '../data/keyQAFields'
