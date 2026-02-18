@@ -155,13 +155,13 @@ export function MakeProfile() {
           }
           return acc
         }, {}),
-        currentCompany: professionalDetails.currentCompany.trim() || undefined,
-        currentRole: professionalDetails.currentRole.trim() || undefined,
-        linkedinURL: professionalDetails.linkedinURL.trim() || undefined,
+        currentCompany: professionalDetails.currentCompany.trim() || "",
+        currentRole: professionalDetails.currentRole.trim() || "",
+        linkedinURL: professionalDetails.linkedinURL.trim() || "",
         interestAreas:
           professionalDetails.interestAreas.length > 0
             ? professionalDetails.interestAreas
-            : undefined,
+            : [],
       }
 
       await updateDoc(userRef, payload)
